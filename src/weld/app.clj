@@ -10,8 +10,8 @@
   (str "request: " (.toUpperCase (name (request-method req))) " "
        (full-uri req)))
 
-(defn routing-log [ns-sym fn-sym]
-  (str "routing: " (pr-str ns-sym) "/" (pr-str fn-sym)))
+(defn routing-log [qual-fn-sym]
+  (str "routing: " (pr-str qual-fn-sym)))
 
 (defn params-log [req]
   (str "params: " (pr-str (params req))))
@@ -28,11 +28,13 @@
     (log logger (request-log req))
     (let [start (System/currentTimeMillis)
           req+ (init req)]
-      (let [[ns-sym fn-sym a-fn r-params]
-              (recognize router (request-method req+) (uri req+))
-            req++           (assoc-route-params req+ r-params)]
-        (log logger (routing-log ns-sym fn-sym))
-        (log logger (params-log req++))
-        (let [resp (a-fn req++)]
+      (let [method                 (request-method req+)
+            uri                    (uri req+)
+            [qual-fn-sym r-params] (recognize router method uri)
+            req++                  (assoc-route-params req+ r-params)
+            action-fn              (resolve qual-fn-sym)]
+        (log logger (routing-log qual-fn-sym))
+        (log logger req++)
+        (let [resp (action-fn req++)]
           (log logger (response-log resp start))
           resp)))))

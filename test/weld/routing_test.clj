@@ -4,20 +4,17 @@
 
 (def show (fn [req] req))
 
-(def c 'weld.routing-test)
-
 (def routes
-  [[c 'index          :index     :get  "/"                  ]
-   [c 'show           :show      :get  "/show/:slug"        ]
-   [c 'page-not-found :not-found :any  "/:path" {:path ".*"}]])
+  [['weld.routing-test/index          :index     :get  "/"                  ]
+   ['weld.routing-test/show           :show      :get  "/show/:slug"        ]
+   ['weld.routing-test/page-not-found :not-found :any  "/:path" {:path ".*"}]])
 
 (routing/defrouting "host" routes)
 
 (deftest "recognize"
-  (let [[ns-sym fn-sym action-fn params] (routing/recognize router :get "/show/foo")]
-    (assert= 'weld.routing-test ns-sym)
-    (assert= 'show fn-sym)
-    (assert= :shown (action-fn :shown))
+  (let [[fn-sym params] (routing/recognize router :get "/show/foo")]
+    (assert= 'weld.routing-test/show fn-sym)
+    (assert= :shown ((resolve fn-sym) :shown))
     (assert= {:slug "foo"} params)))
 
 (deftest "path-info"

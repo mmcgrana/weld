@@ -1,27 +1,25 @@
 (ns weld.routing
   (:use clj-routing.core weld.utils))
 
-(defn compiled-router [root routes]
+(defn compiled-router
   "Returns a router object that can then be used in any of the routing functions
   below. TODO: doc routes format."
+  [root routes]
   {:symbolic-recognizer
      (compile-recognizer
-       (map (fn [[ns-sym fn-sym name method path opts]]
-              [[ns-sym fn-sym] method path opts])
+       (map (fn [[fn-sym name meth path opts]] [fn-sym meth path opts])
             routes))
    :path-info
      (compile-generator
-       (map (fn [[ns-sym fn-sym name method path opts]]
-              [name method path opts])
+       (map (fn [[fn-sym name meth path opts]] [name meth path opts])
             routes))
    :root root})
 
-(defn recognize [router method path]
-  "Returns an [action-fn params] tuple based on the router, http method, and 
-  path, taking advantage of dynamic resolution."
-  [method path]
-  (let [[[ns-sym fn-sym] params] ((:symbolic-recognizer router) method path)]
-    [ns-sym fn-sym (ns-resolve ns-sym fn-sym) params]))
+(defn recognize
+  "Returns an [qualified-fn-sym params] tuple based on the router, http method,
+  and  path."
+  [router method path]
+  ((:symbolic-recognizer router) method path))
 
 (defn path-info
   "Returns a [method path unused-params] tuple based on the router, action name,
@@ -32,7 +30,7 @@
 (defn path
   "Returns a path based on the router, action name, and optional params."
   [router name & [params]]
-  (second (path-info router name params)))
+  (nth (path-info router name params) 1))
 
 (defn absolutize
   "Returns a fully qualifid version of the path based on the root in the 
@@ -45,12 +43,12 @@
   and optional params."
   [router name & [params]]
   (let [path-tuple (path-info router name params)]
-    (assoc path-tuple 1 (absolutize router (get path-tuple 1)))))
+    (assoc path-tuple 1 (absolutize router (nth path-tuple 1)))))
 
 (defn url
   "Returns a full url based on the router, action name, and optional params."
   [router name & [params]]
-  (second (url-info router name params)))
+  (absolutize router (path router name params)))
 
 (defmacro defrouting
   "Define convenience routing functions based on the root and routes coll, as
