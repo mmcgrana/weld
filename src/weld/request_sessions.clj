@@ -64,7 +64,7 @@
   "Like write-session, but stores an addional 'flash' message that will persist
   only through the next request/response cycle. Note that if you flash a session
   the desired single-cyle durability of the message will only occur if the 
-  client is resent the session on the subsequent request."
+  client is resent the (faded) session on the subsequent request."
   [sess message resp]
   (write-session (assoc sess :flash message)
     resp))
