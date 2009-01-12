@@ -45,7 +45,7 @@
   and optional params."
   [router name & [params]]
   (let [path-tuple (path-info router name params)]
-    (update path-tuple 1 (fn [path] (absolutize router path)))))
+    (assoc path-tuple 1 (absolutize router (get path-tuple 1)))))
 
 (defn url
   "Returns a full url based on the router, action name, and optional params."
