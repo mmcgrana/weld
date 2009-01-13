@@ -29,5 +29,5 @@
   [attrs]
   (let [route-params (get attrs :weld.request/route-params)]
     (assoc-route-params
-      (init (merge base-req (dissoc attrs :weld.request/route-params)))
+      (new-request (merge base-req (dissoc attrs :weld.request/route-params)))
       route-params)))

@@ -6,7 +6,8 @@
 
 (defn request
   "Returns the response of app to mock request build according to the method,
-  path and options."
+  path and options.
+  Options: :remote-addr, :params."
   [app [method path] & [options]]
   (app {:uri            path
         :request-method method

@@ -1,0 +1,25 @@
+Securitize session
+Check dependencies
+Documentation
+  Where to put
+  Finish out docstrings
+  Narative/tutorial
+  2 or 3 Example apps
+
+
+10000 sessions of the form {:user_id 27 :session_id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
+
+MRI:
+  Marshal: 0.249567031860352
+  Base64: 0.146347045898438
+  Both: 0.37
+
+Clojure:
+  prn-str: 0.25
+  read-string: 0.22
+  base64: .38
+  All: 0.85
+
+Not good, but at 200 req/second its about 5% of request time.
+Could probably be made 2-10 times faster with a simple Java extension.
+Workable for now though

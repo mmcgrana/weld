@@ -230,9 +230,9 @@
   [req]
   (get-in req [:headers "http-referer"]))
 
-(defn init
+(defn new-request
   "Returns a prepared request based on the given raw reqest, where the
-  preparations enable the request to correctly handle memoization."
+  preparations enable the request to correctly handle caching."
   [req]
   (let [req+   (assoc req   ::body-str-delay         (delay (body-str-once req)))
         req++  (assoc req+  ::multipart-params-delay (delay (multipart-params-once req+)))
