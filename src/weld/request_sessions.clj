@@ -1,11 +1,9 @@
 (in-ns 'weld.request)
 
-;; TODO: customizable
-(def session-cookie-key :weld-session-cookie-key)
+(declare session-cookie-key session-secret-key)
 
 ;; TODO, proper hmac, customizable
 (def hmac identity)
-(def session-secret-key "weld-request-session-secret-key")
 
 (defn marshal
   "Returns a the session hash data marshaled into a base64 string."

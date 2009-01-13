@@ -1,5 +1,7 @@
 (ns weld.app
-  (:use weld.request weld.routing clj-log.core))
+  (:use (weld request routing utils) clj-log.core))
+
+(def logger nil)
 
 (defmacro maybe-log
   "Helper for logging around the request/response cycle."
@@ -24,18 +26,19 @@
 (defn new-app
   "Returns an app paramaterized by the given router, as compiled by
   weld.routing/compiled-router."
-  [router & [logger]]
+  [config]
   (fn [req]
-    (maybe-log logger (request-msg req))
-    (let [start (System/currentTimeMillis)
-          req+ (new-request req)]
-      (let [method                 (request-method req+)
-            uri                    (uri req+)
-            [qual-fn-sym r-params] (recognize router method uri)
-            req++                  (assoc-route-params req+ r-params)
-            action-fn              (resolve qual-fn-sym)]
-        (maybe-log logger (routing-msg qual-fn-sym))
-        (maybe-log logger (params-msg req++))
-        (let [resp (action-fn req++)]
-          (maybe-log logger (response-msg resp start))
-          resp)))))
+    (binding* config
+      (maybe-log logger (request-msg req))
+      (let [start (System/currentTimeMillis)
+            req+ (new-request req)]
+        (let [method                 (request-method req+)
+              uri                    (uri req+)
+              [qual-fn-sym r-params] (recognize method uri)
+              req++                  (assoc-route-params req+ r-params)
+              action-fn              (resolve qual-fn-sym)]
+          (maybe-log logger (routing-msg qual-fn-sym))
+          (maybe-log logger (params-msg req++))
+          (let [resp (action-fn req++)]
+            (maybe-log logger (response-msg resp start))
+            resp))))))

@@ -21,14 +21,12 @@
   [map key or-form]
   `(or (get ~map ~key) ~or-form))
 
-(defn memoize-by
-  "Memoize a function of one argument by some function on that argument."
-  [key-f f]
-  (let [mem (atom {})]
-    (fn [arg]
-      (let [key (key-f arg)]
-        (if-let [e (find @mem key)]
-          (val e)
-          (let [ret (f arg)]
-            (swap! mem assoc key ret)
-            ret))))))
+; http://paste.lisp.org/display/73551"
+(defmacro binding*
+  "Like binding, but takes a runtime map of vars to values."
+  [vars-to-vals & body]
+  `(do
+     (clojure.lang.Var/pushThreadBindings ~vars-to-vals)
+     (try
+       ~@body
+       (finally (clojure.lang.Var/popThreadBindings)))))

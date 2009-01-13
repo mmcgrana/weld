@@ -18,12 +18,8 @@
   (assert= :bar (get-or {:foo :bar} :foo (throw (Exception. "fail"))))
   (assert= :bat (get-or {:foo :bar} :biz :bat)))
 
-(deftest "memoize-by"
-  (let [memoized (memoize-by :mem-key :val-key)]
-    (let [h1 {:mem-key 1 :val-key :a}
-          h2 {:mem-key 1 :val-key :b}
-          h3 {:mem-key 2 :val-key :c}]
-      (assert= (memoized h1) :a)
-      (assert= (memoized h1) :a)
-      (assert= (memoized h2) :a)
-      (assert= (memoized h3) :c))))
+(deftest "binding*"
+  (declare foo bar)
+  (assert= [:foo :bar]
+    (binding* {#'foo :foo #'bar :bar}
+      [foo bar])))

@@ -6,6 +6,15 @@ Documentation
   Narative/tutorial
   2 or 3 Example apps
 
+IE what if there are multiple apps in a vm, at the same time, and I want
+ them to use different values for their session secret keys?
+ It turned out to be easy for e.g. the logger, but what about other options?
+ One option would be bindings - but really thread descendant not thread local
+
+What if we passed these config options in the request and then bound them at the
+beginning of each request?? - sick.
+
+== Marshal bench
 
 10000 sessions of the form {:user_id 27 :session_id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
 
