@@ -5,10 +5,11 @@
     (assert= data (unmarshal (marshal data)))))
 
 (deftest "dump-session, load-session"
-  (let [dumped        (dump-session {:foo "bar"})]
-    (assert= "weld-request-session-key=ezpmb28gImJhciJ9" dumped)
+  (let [dumped (dump-session {:foo "bar"})]
     (assert= {:foo "bar"}
-      (load-session (req-with {:headers {"cookie" dumped}})))))
+      (load-session (req-with {:headers {"cookie" dumped}})))
+    (assert-nil
+      (load-session (req-with {:headers {"cookies" (str dumped "fake")}})))))
 
 (defn response-cookies
   [resp]

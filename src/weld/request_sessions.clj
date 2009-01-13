@@ -1,6 +1,11 @@
 (in-ns 'weld.request)
 
-(def session-cookie-key :weld-request-session-key)
+;; TODO: customizable
+(def session-cookie-key :weld-session-cookie-key)
+
+;; TODO, proper hmac, customizable
+(def hmac identity)
+(def session-secret-key "weld-request-session-secret-key")
 
 (defn marshal
   "Returns a the session hash data marshaled into a base64 string."
@@ -13,31 +18,34 @@
   (read-string (base64-decode marshaled)))
 
 (defn load-session
-  "Returns the session hash data contained in the cookies of the env, if such
+  "Returns the session hash data contained in the cookies of the req, if such
   data is present, or nil otherwise."
-  [env]
-  (if-let [marshaled (cookies env session-cookie-key)]
-    (unmarshal marshaled)))
+  [req]
+  (if-let [cookie-data (cookies req session-cookie-key)]
+    (let [[marshaled digest] (re-split #"--" cookie-data)]
+      (if (= digest (hmac marshaled))
+        (unmarshal marshaled)))))
 
 (defn dump-session
   "Returns a cookie value that can be set to persist the given session on a
   client."
   [sess]
-  (let [marshaled (marshal sess)]
-    (if (> (.length marshaled) 4000)
-      (throwf "Session too big.")
-      (cookie-str session-cookie-key marshaled))))
+  (let [marshaled   (marshal sess)
+        cookie-data (str marshaled "--" (hmac marshaled))]
+    (if (> (.length cookie-data) 4000)
+      (throwf "Session exceeds 4k.")
+      (cookie-str session-cookie-key cookie-data))))
 
 (defn session
-  "Returns session data extracted from the env. If only the env is given as
+  "Returns session data extracted from the req. If only the req is given as
   an argument, returns the complete session hash. Otherwise uses the addional
   args to get-in the session."
-  ([env]
-   (if-let [loaded (load-session env)]
+  ([req]
+   (if-let [loaded (load-session req)]
      (with-meta loaded
        {:had-flash? (contains? loaded :flash)})))
-  ([env arg]
-   (get (session env) arg)))
+  ([req arg]
+   (get (session req) arg)))
 
 (defn write-session
   "Augment a response to include a cookie that will persist the given session."
@@ -45,7 +53,7 @@
   (let [unflashed (if (get ^sess :had-flash?)
                     (dissoc sess :flash)
                     sess)]
-    (conj-cookie resp (dump-session unflashed) )))
+    (conj-cookie resp (dump-session unflashed))))
 
 (defn reset-session
   "Send a blank session cookie to the client, thereby resetting the session
