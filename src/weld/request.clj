@@ -1,9 +1,6 @@
 (ns weld.request
-  (:use clojure.contrib.def
-        clojure.contrib.str-utils
-        clojure.contrib.except
-        weld.http-utils
-        weld.utils)
+  (:use (clojure.contrib def str-utils except)
+        (weld utils http-utils))
   (:require [clj-time.core :as time])
   (:import (org.apache.commons.fileupload FileUpload RequestContext)
            (org.apache.commons.fileupload.disk DiskFileItemFactory DiskFileItem)
@@ -18,8 +15,7 @@
 (defvar- local-ip-re          #"^(?i)unknown$|^(127|10|172.16|192.168)\.")
 
 (defvar- recognized-nonpiggyback-methods
-  #{:get :head :put :delete :options}
-  "A set of Keywords corresponding to recognized nonpiggyback http methods.")
+  #{:get :head :put :delete :options})
 
 (defn headers
   "Returns the raw headers for the request."
@@ -57,18 +53,23 @@
   [req]
   (query-parse (query-string req)))
 
-(defn body-str
-  "Returns a single String of the raw request body. Should  be called only 
-  within an exclusive guard that rules out all other such guards, i.e. it must
-  be called no more than once. Should not be called if the reader input is to 
-  be used."
-  [req]
-  (force (:weld.request/body-str-delay req)))
+(defn- get-delayed
+  "Returns the forced delayed value corresponding to the given key, or raises
+  if the key is missing."
+  [req key]
+  (if (contains? req key)
+    (force (get req key))
+    (throwf (str "missing " key ", only had " (pr-str (keys req))))))
 
-(defn- body-str-io
+(defn body-str
+  "Returns a single String of the raw request body, decoding according to the
+  requests character encoding."
   [req]
+  (get-delayed req ::body-str-delay))
+
+(defn- body-str-once [req]
   (with-open [#^InputStream stream (:body req)]
-    (IOUtils/toString stream)))
+    (IOUtils/toString stream (character-encoding req))))
 
 (defn form-params
   "Returs a hash of params described by the request's post body if the 
@@ -78,22 +79,20 @@
     (if (re-match? form-url-encoded-re ctype)
       (query-parse (body-str req)))))
 
-(def #^{:private true
-        :doc "Multipart parsing handler. Saves all multipart param values
-              as tempfiles, regardless of size."}
-  disk-file-item-factory
+(defvar- disk-file-item-factory
   (doto (DiskFileItemFactory.)
     (.setSizeThreshold -1)
-    (.setFileCleaningTracker nil)))
+    (.setFileCleaningTracker nil))
+  "Multipart parsing handler. Saves all multipart param values as tempfiles,
+  regardless of size.")
 
 (defn multipart-params
   "Returns a hash of multipart params if the content-type indicates a multipart
   request, nil otherwise."
   [req]
-  (force (:weld.request/multipart-params-delay req)))
+  (get-delayed req ::multipart-params-delay))
 
-(defn- multipart-params-io
-  [req]
+(defn- multipart-params-once [req]
   (if-let [ctype (content-type req)]
     (if (re-match? multipart-re ctype)
       (let [upload  (FileUpload. disk-file-item-factory)
@@ -121,28 +120,38 @@
   "Returns a hash of mock params given directly in the req, if any.
   Used for testing."
   [req]
-  (:weld.request/mock-params req))
+  (::mock-params req))
 
-(def #^{:doc "Returns all params except for those determined from the route."}
-  params*
-  (memoize-by :weld.request/memoization-key
-    (fn [req]
-      (merge (query-params     req)
-             (form-params      req)
-             (multipart-params req)
-             (mock-params      req)))))
+(defn params*
+  "Returns all params except for those determined from the route."
+  [req]
+  (get-delayed req ::params*-delay))
+
+(defn- params*-once [req]
+  (merge (query-params     req)
+         (form-params      req)
+         (multipart-params req)
+         (mock-params      req)))
+
+(defn route-params
+  "Returns the params derived from the uri of the request."
+  [req]
+  (::route-params req))
 
 (defn params
   "Returns params, including those determined from the route.
   If a single arg is given, an req, returns all such params.
   If additional args are given, they are used to get-in these params"
   ([req]
-     (merge (params* req) (:weld.request/route-params req)))
+    (get-delayed req ::params-delay))
   ([req & args]
    (get-in (params req) args)))
 
+(defn- params-once [req]
+  (merge (params* req) (route-params req)))
+
 (defn request-method*
-  "Returns the literal request method indicated in the req, before taking
+  "Returns the literal request method indicated in the reqest, before taking
   into account piggybacking."
   [req]
   (:request-method req))
@@ -225,13 +234,15 @@
   "Returns a prepared request based on the given raw reqest, where the
   preparations enable the request to correctly handle memoization."
   [req]
-  (assoc req
-    :weld.request/memoization-key        (clojure.lang.RT/nextID)
-    :weld.request/multipart-params-delay (delay (multipart-params-io req))
-    :weld.request/body-str-delay         (delay (body-str-io req))))
+  (let [req+   (assoc req   ::body-str-delay         (delay (body-str-once req)))
+        req++  (assoc req+  ::multipart-params-delay (delay (multipart-params-once req+)))
+        req+++ (assoc req++ ::params*-delay          (delay (params*-once req++)))]
+    req+++))
 
 (defn assoc-route-params
   "Returns a new request object like the corresponding to the given one but 
   including the given route-params."
   [req route-params]
-  (assoc req :weld.request/route-params route-params))
+  (let [req+  (assoc req  ::route-params route-params)
+        req++ (assoc req+ ::params-delay (delay (params-once req+)))]
+    req++))

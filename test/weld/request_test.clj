@@ -55,16 +55,17 @@
       (params* (req-with {:query-string "query=query"
                           :weld.request/mock-params {:mock "mock"}}))))
   (binding [weld.request/multipart-params (constantly nil)]
-    (assert= {:query "query" :form "form" :mock "mock"}
-      (params* (req-with {:query-string "query=query"
-                          :body (str-input-stream "form=form")
-                          :content-type "application/x-www-form-urlencoded"
-                          :weld.request/mock-params {:mock "mock"}})))))
+    (let [req (req-with {:query-string "query=query"
+                         :body (str-input-stream "form=form")
+                         :content-type "application/x-www-form-urlencoded"
+                         :weld.request/mock-params {:mock "mock"}})
+          the-params* (params* req)]
+      (assert= {:query "query" :form "form" :mock "mock"} the-params*))))
 
 (deftest "params"
-  (assert= {:query "query" :route "route"}
+  (assert= {:query "query" :mock "mock"}
     (params (req-with {:query-string "query=query"
-                       :weld.request/route-params {:route "route"}})))
+                       :weld.request/mock-params {:mock "mock"}})))
   (assert= "bat"
     (let [the-env (req-with {:query-string "foo[bar]=bat"})]
       (params the-env :foo :bar))))
