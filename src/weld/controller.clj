@@ -1,5 +1,4 @@
 (ns weld.controller
-  (:use weld.utils)
   (:import (org.apache.commons.io FilenameUtils)))
 
 (defn respond
@@ -34,7 +33,8 @@
   "Returns a response tuple that will cause the client to download the given
   file."
   [file & [opts]]
-  (let [filename (get-or opts :filename (FilenameUtils/getName (.getPath file)))]
+  (let [filename (or (get opts :filename)
+                     (FilenameUtils/getName (.getPath file)))]
     {:status  200
      :headers {"Content-Transfer-Encoding" "binary"
                "Content-Disposition"       (str "attachment; filename=" filename)}

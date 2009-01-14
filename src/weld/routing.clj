@@ -1,5 +1,5 @@
 (ns weld.routing
-  (:use clj-routing.core weld.utils))
+  (:use clj-routing.core))
 
 (declare *router* *host*)
 

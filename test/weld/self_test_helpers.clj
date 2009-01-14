@@ -13,7 +13,7 @@
    :remote-addr        nil
    :uri                "/foo/bar"
    :query-string       ""
-   :scheme             "http"
+   :scheme             :http
    :request-method     :get
    :headers            {}
    :content-type       nil

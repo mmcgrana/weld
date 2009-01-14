@@ -1,13 +1,25 @@
 (ns weld.app-test
   (:use clj-unit.core
-        (weld app request self-test-helpers))
+        (weld app routing request self-test-helpers config))
   (:require (weld routing routing-test)))
 
-(deftest "new-app"
-  (let [app       (new-app {#'weld.routing/*router* weld.routing-test/router})
-        echod-req (app (req-with {:request-method :get :uri "/show/foo"
-                                  :body (str-input-stream   "foobar")}))]
-    (assert= {:slug "foo"} (params echod-req))
-    (assert= :get          (request-method echod-req))
-    (assert= "foobar"      (body-str echod-req))))
+(defn echo [req] req)
+
+(def router
+  (compiled-router [['weld.app-test/echo :echo   :get "/echo/:id"]
+                    ['foo/bar            :foobar :get "/foo/bar"]]))
+
+(def config
+  {'weld.routing/*router* router
+   'weld.app/*logger*       {:test (constantly true) :log identity}})
+
+(deftest "app"
+  (with-config config
+    (assert-throws #"Routed to symbol that does not resolve: foo/bar"
+      (app (req-with {:request-method :get :uri "/foo/bar"})))
+    (let [req-echo (app (req-with {:request-method :get :uri "/echo/bat"
+                                   :body (str-input-stream "foobar")}))]
+      (assert= {:id "bat"} (params req-echo))
+      (assert= :get        (request-method req-echo))
+      (assert= "foobar"    (body-str req-echo)))))
 

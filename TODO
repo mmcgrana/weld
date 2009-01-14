@@ -1,6 +1,14 @@
 Securitize session w/ proper hmac
 Check dependencies
 think about how to best set config w.r.t dev, prod, test, and console
+  prob not with per-request wrapper, at least by default, though that would
+   be a good option for multiple sim. first clas apps.
+  perhaps a config! method in weld.app would be good
+  deftest-conf is goofy, but assuming we can avoid in simple user apps then ok
+  pconfigs! wont work with multiple configs in test because
+   declare-time is different from test-time
+  perhaps with-config
+  
 Throw useful exception when name doesn't resolve
 move config outside of app?
 error message on (params :id) is brutal...

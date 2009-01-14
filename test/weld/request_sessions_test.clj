@@ -1,14 +1,18 @@
 (in-ns 'weld.request-test)
 
 (defn response-cookies-data
+  "Returns the Set-Cookie header value for the response."
   [resp]
   (get-in resp [:headers "Set-Cookie"]))
 
 (defn req-with-cookies-data
+  "Returns a Ring request with cookie-data corresponding to the given string."
   [cookies-data]
   (req-with {:headers {"cookie" (str-join "; " cookies-data)}}))
 
 (defn req-from-response
+  "Returns a request that simulates a client sending back the cookies set in the
+  given response."
   [resp]
   (req-with-cookies-data (response-cookies-data resp)))
 
@@ -16,14 +20,16 @@
   {:status :s :headers {} :body :s})
 
 (defn cookied-req []
+  "Returns a Ring request with cookie data corresponding to a {:foo \"bar\"}
+  session."
   (req-from-response (write-session {:foo "bar"} blank-response)))
 
-(defmacro deftest-conf
-  [name & body]
-  `(deftest ~name
-     (binding [weld.request/*session-cookie-key* :cookie-key
-               weld.request/*session-secret-key* "secret-key"]
-       ~@body)))
+(def config
+  {'weld.request/*session-cookie-key* :cookie-key
+   'weld.request/*session-secret-key* "secret-key"})
+
+(defmacro deftest-conf [name & body]
+  `(deftest ~name (with-config config ~@body)))
 
 (deftest-conf "marshal, unmarshal"
   (let [data {:foo "bar"}]

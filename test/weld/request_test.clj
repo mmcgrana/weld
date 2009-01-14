@@ -1,6 +1,6 @@
 (ns weld.request-test
   (:use clj-unit.core
-        (weld request self-test-helpers)
+        (weld request self-test-helpers config)
         clojure.contrib.str-utils)
   (:require [clj-time.core :as time])
   (:load "request_cookies_test" "request_sessions_test"))
@@ -42,8 +42,6 @@
   (assert= {:foo {:bar "bat"}}
     (form-params (req-with {:body (str-input-stream "foo[bar]=bat")
                             :content-type "application/x-www-form-urlencoded"}))))
-
-; TODO: multipart-params - needs pretty elaborate helper infrastructure
 
 (deftest "mock-params"
   (assert= {:foo "bar"}
@@ -96,7 +94,6 @@
 (deftest "server-port"
   (assert= 80 (server-port (req-with {:server-port 80}))))
 
-; TODO: need to review the whole server host / name / port thing
 (def xfhost-header {"x-forwarded-host" "google.com"})
 (def h-header      {"host"             "yahoo.com"})
 (def server-attrs  {:server-name "ask.com" :server-port 80})

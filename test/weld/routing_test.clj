@@ -1,5 +1,5 @@
 (ns weld.routing-test
-  (:use clj-unit.core weld.routing))
+  (:use clj-unit.core (weld routing config)))
 
 (def show (fn [req] req))
 
@@ -11,12 +11,11 @@
 (def router (compiled-router routes))
 (def host "host")
 
-(defmacro deftest-conf
-  [name & body]
-  `(deftest ~name
-     (binding [weld.routing/*router* router
-               weld.routing/*host* host]
-       ~@body)))
+(def config {'weld.routing/*router* router
+             'weld.routing/*host* host})
+
+(defmacro deftest-conf [name & body]
+  `(deftest ~name (with-config config ~@body)))
 
 (deftest-conf "recognize"
   (let [[fn-sym params] (recognize :get "/show/foo")]

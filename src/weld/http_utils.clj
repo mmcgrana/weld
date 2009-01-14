@@ -1,6 +1,5 @@
 (ns weld.http-utils
-  (:use (clojure.contrib def str-utils except)
-        weld.utils)
+  (:use (clojure.contrib def str-utils except))
   (:import org.apache.commons.codec.binary.Base64))
 
 (defn url-escape
@@ -103,10 +102,10 @@
         rest-keys (butlast (rest line))
         value     (last (rest line))]
     (str (url-escape (name first-key))
-         (str-cat (map (fn [key]
-                         (if (= key []) "[]"
-                           (str "[" (url-escape (name key)) "]")))
-                       rest-keys))
+         (apply str (map (fn [key]
+                           (if (= key []) "[]"
+                             (str "[" (url-escape (name key)) "]")))
+                         rest-keys))
          "=" (url-escape (str value)))))
 
 (defn query-unparse-lines

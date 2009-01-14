@@ -5,4 +5,4 @@
   'weld.http-utils-test
   'weld.request-test
   'weld.routing-test
-  'weld.utils-test)
+  'weld.config-test)

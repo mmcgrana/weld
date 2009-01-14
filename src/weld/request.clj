@@ -1,6 +1,6 @@
 (ns weld.request
   (:use (clojure.contrib def str-utils except)
-        (weld utils http-utils))
+        weld.http-utils)
   (:require [clj-time.core :as time])
   (:import (org.apache.commons.fileupload FileUpload RequestContext)
            (org.apache.commons.fileupload.disk DiskFileItemFactory DiskFileItem)
@@ -76,7 +76,7 @@
   content-type indicates a form url encoded request, nil otherwise."
   [req]
   (if-let [ctype (content-type req)]
-    (if (re-match? form-url-encoded-re ctype)
+    (if (re-find form-url-encoded-re ctype)
       (query-parse (body-str req)))))
 
 (defvar- disk-file-item-factory
@@ -94,7 +94,7 @@
 
 (defn- multipart-params-once [req]
   (if-let [ctype (content-type req)]
-    (if (re-match? multipart-re ctype)
+    (if (re-find multipart-re ctype)
       (let [upload  (FileUpload. disk-file-item-factory)
             context (proxy [RequestContext] []
                       (getContentType       [] (content-type req))
@@ -211,7 +211,7 @@
   "Returns true if the given request was an AJAX request."
   [req]
   (if-let [xrw (get-in req [:headers "x-requested-with"])]
-    (re-match? ajax-http-request-re xrw)))
+    (re-find ajax-http-request-re xrw)))
 
 (defn remote-ip
   "Returns a String representing our best guess for the IP of the requesting 
@@ -221,8 +221,8 @@
     (or (get headers "client-ip")
         (if-let [forwarded (get headers "x-forwarded-for")]
           (let [all-ips       (re-split #"," forwarded)
-                remote-ips (remove #(re-match? local-ip-re %) all-ips)]
-            (if (not (empty? remote-ips)) (trim (first remote-ips)))))
+                remote-ips (remove #(re-find local-ip-re %) all-ips)]
+            (if (not (empty? remote-ips)) (.trim (first remote-ips)))))
         (:remote-addr req))))
 
 (defn referrer

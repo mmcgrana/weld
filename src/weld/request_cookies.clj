@@ -35,7 +35,7 @@
   [response cookie-string]
   (let [headers     (:headers response)
         new-headers (assoc headers "Set-Cookie"
-                       (conj (get-or headers "Set-Cookie" []) cookie-string))]
+                       (conj (or (get headers "Set-Cookie") []) cookie-string))]
     (assoc response :headers new-headers)))
 
 (defn with-cookie
