@@ -1,5 +1,12 @@
-Securitize session
+Securitize session w/ proper hmac
 Check dependencies
+think about how to best set config w.r.t dev, prod, test, and console
+Throw useful exception when name doesn't resolve
+move config outside of app?
+error message on (params :id) is brutal...
+rethink check keys
+consider sprinkled type checks
+test app.clj more
 Documentation
   Where to put
   Finish out docstrings

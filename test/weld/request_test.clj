@@ -90,8 +90,8 @@
     (scheme (req-with {:scheme :http}))))
 
 (deftest "ssl?"
-  (assert-not  (ssl? (req-with {:scheme "http"})))
-  (assert-that (ssl? (req-with {:scheme "https"}))))
+  (assert-not  (ssl? (req-with {:scheme :http})))
+  (assert-that (ssl? (req-with {:scheme :https}))))
 
 (deftest "server-port"
   (assert= 80 (server-port (req-with {:server-port 80}))))
@@ -112,7 +112,7 @@
 
 (deftest "full-uri"
   (assert= "https://google.com/foo/bar"
-    (full-uri (req-with {:uri "/foo/bar" :scheme "https"
+    (full-uri (req-with {:uri "/foo/bar" :scheme :https
                          :headers {"host" "google.com"}}))))
 
 (deftest "user-agent"

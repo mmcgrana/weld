@@ -8,12 +8,14 @@
    ['weld.routing-test/show           :show      :get  "/show/:slug"        ]
    ['weld.routing-test/page-not-found :not-found :any  "/:path" {:path ".*"}]])
 
-(def test-router (compiled-router "host" routes))
+(def router (compiled-router routes))
+(def host "host")
 
 (defmacro deftest-conf
   [name & body]
   `(deftest ~name
-     (binding [weld.routing/router test-router]
+     (binding [weld.routing/*router* router
+               weld.routing/*host* host]
        ~@body)))
 
 (deftest-conf "recognize"

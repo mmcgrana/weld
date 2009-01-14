@@ -181,7 +181,7 @@
 (defn ssl?
   "Returns tree iff the request was submitted made over ssl."
   [req]
-  (= "https" (scheme req)))
+  (= :https (scheme req)))
 
 (defn server-port
   "Returns a Integer for the server port."
@@ -200,7 +200,7 @@
   "Returns a String for the full request uri, including the protocol and host
   but excluding the port."
   [req]
-  (str (scheme req) "://" (server-host req) (uri req)))
+  (str (name (scheme req)) "://" (server-host req) (uri req)))
 
 (defn user-agent
   "Returns a String for the http user agent."

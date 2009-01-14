@@ -21,8 +21,8 @@
 (defmacro deftest-conf
   [name & body]
   `(deftest ~name
-     (binding [weld.request/session-cookie-key :cookie-key
-               weld.request/session-secret-key "secret-key"]
+     (binding [weld.request/*session-cookie-key* :cookie-key
+               weld.request/*session-secret-key* "secret-key"]
        ~@body)))
 
 (deftest-conf "marshal, unmarshal"

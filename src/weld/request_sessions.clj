@@ -1,8 +1,7 @@
 (in-ns 'weld.request)
 
-(declare session-cookie-key session-secret-key)
+(declare *session-cookie-key* *session-secret-key*)
 
-;; TODO, proper hmac, customizable
 (def hmac identity)
 
 (defn marshal
@@ -19,7 +18,7 @@
   "Returns the session hash data contained in the cookies of the req, if such
   data is present, or nil otherwise."
   [req]
-  (if-let [cookie-data (cookies req session-cookie-key)]
+  (if-let [cookie-data (cookies req *session-cookie-key*)]
     (let [[marshaled digest] (re-split #"--" cookie-data)]
       (if (= digest (hmac marshaled))
         (unmarshal marshaled)))))
@@ -32,7 +31,7 @@
         cookie-data (str marshaled "--" (hmac marshaled))]
     (if (> (.length cookie-data) 4000)
       (throwf "Session exceeds 4k.")
-      (cookie-str session-cookie-key cookie-data))))
+      (cookie-str *session-cookie-key* cookie-data))))
 
 (defn session
   "Returns session data extracted from the req. If only the req is given as
