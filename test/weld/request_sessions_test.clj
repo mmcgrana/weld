@@ -35,6 +35,9 @@
   (let [data {:foo "bar"}]
     (assert= data (unmarshal (marshal data)))))
 
+(deftest-conf "hmac"
+  (assert-not= (hmac "foo") (hmac "bar")))
+
 (deftest-conf "dump-session, load-session"
   (let [dumped (dump-session {:foo "bar"})]
     (assert= {:foo "bar"}

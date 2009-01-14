@@ -12,10 +12,15 @@
   [escaped]
   (java.net.URLDecoder/decode escaped "UTF-8"))
 
+(defn base64-encode-bytes
+  "Returns a sring of base64 encoded data for the given unencoded bytes."
+  [unencoded]
+  (String. (Base64/encodeBase64 unencoded)))
+
 (defn base64-encode
   [unencoded]
   "Returns a string of base64 encoded data for the given unencoded string."
-  (String. (Base64/encodeBase64 (.getBytes unencoded))))
+  (base64-encode-bytes (.getBytes unencoded)))
 
 (defn base64-decode
   "Returns a string of base64 decoded data for the given encoded string."

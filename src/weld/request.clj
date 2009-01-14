@@ -6,7 +6,9 @@
            (org.apache.commons.fileupload.disk DiskFileItemFactory DiskFileItem)
            (org.apache.commons.io IOUtils)
            (java.io InputStream)
-           (org.joda.time.format DateTimeFormat))
+           (org.joda.time.format DateTimeFormat)
+           (javax.crypto.spec SecretKeySpec)
+           (javax.crypto Mac))
   (:load "request_cookies" "request_sessions"))
 
 (defvar- multipart-re         #"multipart/form-data")

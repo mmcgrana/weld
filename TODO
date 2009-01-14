@@ -1,49 +1,5 @@
-Securitize session w/ proper hmac
-Check dependencies
-think about how to best set config w.r.t dev, prod, test, and console
-  prob not with per-request wrapper, at least by default, though that would
-   be a good option for multiple sim. first clas apps.
-  perhaps a config! method in weld.app would be good
-  deftest-conf is goofy, but assuming we can avoid in simple user apps then ok
-  pconfigs! wont work with multiple configs in test because
-   declare-time is different from test-time
-  perhaps with-config
-  
-Throw useful exception when name doesn't resolve
-move config outside of app?
-error message on (params :id) is brutal...
-rethink check keys
-consider sprinkled type checks
-test app.clj more
 Documentation
   Where to put
   Finish out docstrings
   Narative/tutorial
   2 or 3 Example apps
-
-IE what if there are multiple apps in a vm, at the same time, and I want
- them to use different values for their session secret keys?
- It turned out to be easy for e.g. the logger, but what about other options?
- One option would be bindings - but really thread descendant not thread local
-
-What if we passed these config options in the request and then bound them at the
-beginning of each request?? - sick.
-
-== Marshal bench
-
-10000 sessions of the form {:user_id 27 :session_id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
-
-MRI:
-  Marshal: 0.249567031860352
-  Base64: 0.146347045898438
-  Both: 0.37
-
-Clojure:
-  prn-str: 0.25
-  read-string: 0.22
-  base64: .38
-  All: 0.85
-
-Not good, but at 200 req/second its about 5% of request time.
-Could probably be made 2-10 times faster with a simple Java extension.
-Workable for now though

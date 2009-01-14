@@ -9,17 +9,17 @@
   `(if-let [logger# *logger*]
      (if ((:test logger#) :info) ((:log logger#) ~msg-form))))
 
-(defn request-msg [req]
+(defn- request-msg [req]
   (str "request: " (.toUpperCase (name (request-method* req))) " "
        (full-uri req)))
 
-(defn routing-msg [fn-sym]
+(defn- routing-msg [fn-sym]
   (str "routing: " (pr-str fn-sym)))
 
-(defn params-msg [req]
+(defn- params-msg [req]
   (str "params: " (pr-str (params req))))
 
-(defn response-msg [resp start]
+(defn- response-msg [resp start]
   (let [status (:status resp)]
     (str "response: (" (- (System/currentTimeMillis) start) " msecs) " status
          (if (or (= status 301) (= status 302))

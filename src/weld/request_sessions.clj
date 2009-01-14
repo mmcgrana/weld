@@ -2,7 +2,13 @@
 
 (declare *session-cookie-key* *session-secret-key*)
 
-(def hmac identity)
+(defn hmac [data]
+  "Returns a base64 encoded mac for the given string data, according to the
+  *session-secret-key*"
+  (let [spec  (SecretKeySpec. (.getBytes *session-secret-key*) "HmacSHA256")
+        mac   (doto (javax.crypto.Mac/getInstance "HmacSHA256") (.init spec))
+        bytes (.doFinal mac (.getBytes data))]
+    (base64-encode-bytes bytes)))
 
 (defn marshal
   "Returns a the session hash data marshaled into a base64 string."
