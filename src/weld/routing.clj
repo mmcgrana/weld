@@ -10,11 +10,11 @@
   [qualified-fn-sym name method-keyword path-pattern & [path-options]]."
   [routes]
   {:symbolic-recognizer
-     (compile-recognizer
+     (compiled-recognizer
        (map (fn [[fn-sym name meth path opts]] [fn-sym meth path opts])
             routes))
    :path-info
-     (compile-generator
+     (compiled-generator
        (map (fn [[fn-sym name meth path opts]] [name meth path opts])
             routes))})
 
