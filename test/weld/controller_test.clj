@@ -1,40 +1,76 @@
 (ns weld.controller-test
-  (:use clj-unit.core clj-scrape.core (weld controller test-helpers)))
+  (:use clj-unit.core clj-scrape.core
+        (weld controller self-test-helpers)))
 
 (deftest "respond"
   (assert=
-    {:status 200 :headers {"Content-Type" "text/html"} :body "hello"}
-    (respond "hello")))
-
-(deftest "respond-404"
-  (assert= {:status 404 :headers {"Content-Type" "text/html"} :body "hello"}
-    (respond-404 "hello")))
-
-(deftest "respond-500"
-  (assert= {:status 500 :headers {"Content-Type" "text/html"} :body "o no"}
-    (respond-500 "o no")))
-
-(def base-redirect
-  {:status  302
-   :headers {"Location" "http://google.com"}
-   :body    "You are being <a href=\"http://google.com\">redirected</a>."})
+    {:status 200,
+     :body "hello",
+     :headers
+       {"Content-Type" "text/html",
+        "Cache-Control" "private, max-age=0, must-revalidate"}}
+    (respond "hello"))
+  (assert=
+    {:status 404,
+     :body "miss",
+     :headers
+       {"Content-Type" "application/js",
+        "Cache-Control" "private, max-age=0, must-revalidate"}}
+    (respond "miss" {:status 404 :content-type "application/js"})))
 
 (deftest "redirect"
-  (assert= base-redirect (redirect "http://google.com"))
-  (assert= (assoc base-redirect :status 301)
+  (assert=
+    {:status  302
+     :body    "You are being <a href=\"http://google.com\">redirected</a>."
+     :headers {"Location" "http://google.com"}}
+    (redirect "http://google.com"))
+  (assert=
+    {:status 301
+     :body   "You are being <a href=\"http://google.com\">redirected</a>."
+     :headers {"Location" "http://google.com"}}
     (redirect "http://google.com" {:status 301})))
 
-(def base-file  (java.io.File. "/foo/bar.txt"))
-
-(def base-send-file
-  {:status  200
-   :headers {"Content-Transfer-Encoding" "binary"
-             "Content-Disposition"       "attachment; filename=bar.txt"}
-   :body    base-file})
+(def afile  (java.io.File. "/foo/bar.txt"))
 
 (deftest "send-file"
-  (assert= base-send-file (send-file base-file))
   (assert=
-    (assoc-in base-send-file [:headers "Content-Disposition"]
-      "attachment; filename=custom.txt")
-    (send-file base-file {:filename "custom.txt"})))
+    {:status  200
+     :body    afile
+     :headers
+       {"Content-Transfer-Encoding" "binary"
+        "Content-Disposition" "attachment; filename=bar.txt"
+        "Cache-Control" "private, max-age=0, must-revalidate"}}
+    (send-file afile))
+  (assert=
+    {:status  404
+     :body    afile
+     :headers
+       {"Content-Transfer-Encoding" "binary"
+        "Content-Disposition" "inline; filename=custom.txt"
+        "Cache-Control" "private, max-age=0, must-revalidate"}}
+    (send-file afile
+      {:status 404 :filename "custom.txt" :disposition :inline})))
+
+(def astream (str-input-stream "foobar"))
+
+(deftest "send-stream"
+  (assert=
+    {:status  200
+     :body    astream
+     :headers
+       {"Content-Transfer-Encoding" "binary"
+        "Content-Type" "application/octet-stream"
+        "Content-Disposition" "attachment"
+        "Cache-Control" "private, max-age=0, must-revalidate"}}
+    (send-stream astream))
+  (assert=
+    {:status  404
+     :body    astream
+     :headers
+       {"Content-Transfer-Encoding" "binary"
+        "Content-Type" "application/js"
+        "Content-Disposition" "inline; filename=custom.txt"
+        "Cache-Control" "private, max-age=0, must-revalidate"}}
+    (send-stream astream
+      {:status 404 :filename "custom.txt" :disposition :inline
+       :content-type "application/js"})))

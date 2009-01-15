@@ -40,7 +40,8 @@
 
 (defn with-cookie
   "Returns response, augmented with a Set-Cookie header according to the
-  cookie key, val, and opts."
+  cookie key, val, and opts.
+  Options: :domain, :path, :expires"
   ([key val opts response]
    (conj-cookie response (cookie-str key val opts)))
   ([key val response]
