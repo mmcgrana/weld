@@ -12,8 +12,8 @@
     {:status status
      :body   body
      :headers
-       {"Content-Type" content-type
-        "Cache-Control" "private, max-age=0, must-revalidate"}}))
+       {"Cache-Control" "private, max-age=0, must-revalidate"
+        "Content-Type" content-type}}))
 
 (defn redirect
   "Returns a Ring response for a redirect. 
@@ -52,7 +52,7 @@
   Options:
     :status, defaults to 200
     :filename, defaults to the name of the given file
-    :disposition, :inline or as an :attachment, defaults to the latter
+    :disposition, :inline or as an :attachment, defaults to :atttachment
   Note that content type and length for File reponses can be set by Ring
   middleware."
   [file & [opts]]
