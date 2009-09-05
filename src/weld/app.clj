@@ -1,5 +1,5 @@
 (ns weld.app
-  (:use (weld request routing) clojure.contrib.except clj-backtrace.repl))
+  (:use (weld request routing) clojure.contrib.except clj-stacktrace.repl))
 
 (declare *logger* *handler-sym*)
 

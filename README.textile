@@ -2,10 +2,6 @@ h1. Weld
 
 A Clojure web framework built on "Ring":http://github.com/mmcgrana/ring, Weld is designed for expressiveness and performance in a functional style.
 
-h2. Status
-
-Weld is currently being actively developed and is changing rapidly; more documentation will become available as the API stabilizes. In the meantime, check out the "source code":http://github.com/mmcgrana/cljre.com for "cljre.com":http://cljre.com, an online Clojure regular expression editor implemented with Weld.
-
 ---
 
 Copyright (c) 2009 Mark McGranaghan and released under an MIT license.

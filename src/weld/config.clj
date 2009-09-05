@@ -35,4 +35,4 @@
   "Atomically alter root values of vars according to the given configs."
   [config]
   (doseq [[var val] (var-bindings config)]
-    (alter-var-root var (constantly val))))
+    (.bindRoot var val)))

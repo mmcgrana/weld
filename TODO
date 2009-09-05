@@ -11,3 +11,6 @@ Documentation
 Apps that need private configs can have a "user_config.clj"
 (read-string (slurp "user_config.clj"))
 Though we may need to slurp it off the classpath
+
+Ring:
+  Do we need content-type and content-length??
