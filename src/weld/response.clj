@@ -1,5 +1,6 @@
-(ns weld.controller
-  (:import (org.apache.commons.io FilenameUtils)))
+(ns weld.response
+  (:import (org.apache.commons.io FilenameUtils)
+           (java.io File)))
 
 (defn respond
   "Most general function for returning a body-containing Ring response.
@@ -7,8 +8,8 @@
     :status, defaults to 200
     :content-type, defaults to \"text/html\""
   [body & [opts]]
-  (let [status       (or (get opts :status) 200)
-        content-type (or (get opts :content-type) "text/html")]
+  (let [status       (or (:status opts) 200)
+        content-type (or (:content-type opts) "text/html")]
     {:status status
      :body   body
      :headers
@@ -20,7 +21,7 @@
   Options:
     :status, defaults to 302"
   [url & [opts]]
-  (let [status (or (get opts :status) 302)]
+  (let [status (or (:status opts) 302)]
     {:status  status
      :body    (str "You are being <a href=\"" url "\">redirected</a>.")
      :headers {"Location" url}}))
@@ -33,10 +34,10 @@
     :disposition, :inline or :attachment, defaults to the latter
     :content-type, defaults to \"application/octet-stream\""
   [stream & [opts]]
-  (let [status       (or (get opts :status) 200)
-        filename     (get opts :filename)
-        disposition  (or (get opts :disposition) :attachment)
-        content-type (or (get opts :content-type) "application/octet-stream")]
+  (let [status       (or (:status opts) 200)
+        filename     (:filename opts)
+        disposition  (or (:disposition opts) :attachment)
+        content-type (or (:content-type opts) "application/octet-stream")]
     {:status status
      :body   stream
      :headers
@@ -56,10 +57,10 @@
   Note that content type and length for File reponses can be set by Ring
   middleware."
   [file & [opts]]
-  (let [status      (or (get opts :status) 200)
-        filename    (or (get opts :filename)
-                        (FilenameUtils/getName (.getPath file)))
-        disposition (or (get opts :disposition) :attachment)]
+  (let [status      (or (:status opts) 200)
+        filename    (or (:filename opts)
+                        (FilenameUtils/getName (.getPath #^File file)))
+        disposition (or (:disposition opts) :attachment)]
     {:status  status
      :body file
      :headers

@@ -1,24 +1,23 @@
 (ns weld.test-helpers
-  (:require [weld.http-utils     :as http-utils]
-            [clj-file-utils.core :as file-utils]
-            [org.danlarkin.json  :as json])
-  (:use clj-unit.core clj-scrape.core))
+  (:require (weld [http-utils :as http-utils]))
+  (:import (java.io File))
+  (:use (clj-unit core)))
 
 (defn request
   "Returns the response of app to mock request build according to the method,
   path and options.
   Options: :remote-addr, :params."
-  [app [method path] & [options]]
-  (app {:uri            path
-        :request-method method
-        :remote-addr    (get options :remote-addr)
-        :weld.request/mock-params (get options :params)}))
+  [app [method path] & [opts]]
+  (app {:uri                      path
+        :request-method           method
+        :remote-addr              (:remote-addr opts)
+        :weld.request/mock-params (:params opts)}))
 
 (defn upload
   "Returns an upload hash that can be used as a value in the :params map for
   the mock request helper."
   [file content-type filename]
-  {:tempfile file     :size (file-utils/size file)
+  {:tempfile file     :size (.length #^File file)
    :filename filename :content-type content-type})
 
 (defn assert-status
@@ -38,14 +37,6 @@
        (format "Expecting redirect status and Location of %s, but got %s and %s."
          expected-path status location))))
 
-(defn assert-markup
-  "Assert that a response body matches an expected selector tuple."
-  [expected-selector-tuple actual-body]
-  (let [actual-dom (dom (java.io.StringReader. actual-body))]
-    (assert-truth (apply xml1-> actual-dom :desc expected-selector-tuple)
-      (format "Expecting body matching %s, but did not."
-        expected-selector-tuple))))
-
 (defn assert-content-type
   "Assert that response headers specify an expected content type."
   [expected-type actual-headers]
@@ -53,12 +44,3 @@
     (assert-truth (= expected-type actual-type)
       (format "Expecting Content-Type %s, but got %s"
         expected-type actual-type))))
-
-(defn assert-json
-  "Assert that the json encoded in a response body corresponds to a given
-  hash/array data strucutre."
-  [expected-data actual-body]
-  (let [actual-data (json/decode-from-str actual-body)]
-    (assert-truth (= expected-data actual-data)
-      (format "Expecting JSON parsing to %s, but got %s"
-        (prn-str expected-data) (prn-str actual-data)))))

@@ -1,6 +1,6 @@
-(ns weld.controller-test
-  (:use clj-unit.core clj-scrape.core
-        (weld controller self-test-helpers)))
+(ns weld.response-test
+  (:use (clj-unit core)
+        (weld response self-test-helpers)))
 
 (deftest "respond"
   (assert=

@@ -1,44 +1,35 @@
 (ns weld.routing-test
-  (:use clj-unit.core (weld routing config)))
-
-(def show (fn [req] req))
+  (:use (clj-unit core) (weld routing)))
 
 (def routes
-  [['weld.routing-test/index          :index     :get  "/"                  ]
-   ['weld.routing-test/show           :show      :get  "/show/:slug"        ]
-   ['weld.routing-test/page-not-found :not-found :any  "/:path" {:path ".*"}]])
+  [['index          :index     :get  "/"                       ]
+   ['show           :show      :get  "/show/:slug"             ]
+   ['page-not-found :not-found :any  "/:path"      {:path ".*"}]])
 
 (def router (compiled-router routes))
 (def host "host")
 
-(def config {'weld.routing/*router* router
-             'weld.routing/*host* host})
-
-(defmacro deftest-conf [name & body]
-  `(deftest ~name (with-config config ~@body)))
-
-(deftest-conf "recognize"
-  (let [[fn-sym params] (recognize :get "/show/foo")]
-    (assert= 'weld.routing-test/show fn-sym)
-    (assert= :shown ((resolve fn-sym) :shown))
+(deftest "recognize"
+  (let [[action-sym params] (recognize router :get "/show/foo")]
+    (assert= 'show action-sym)
     (assert= {:slug "foo"} params)))
 
-(deftest-conf "path-info"
+(deftest "path-info"
   (let [info   [:get "/show/foo" {:extra "bar"}]
         params {:slug "foo" :extra "bar"}]
-    (assert= info (path-info :show params))))
+    (assert= info (path-info router :show params))))
 
-(deftest-conf "path"
+(deftest "path"
   (let [the-path "/show/foo"
         params   {:slug "foo" :extra "bar"}]
-    (assert= the-path (path :show params))))
+    (assert= the-path (path router :show params))))
 
-(deftest-conf "url-info"
+(deftest "url-info"
   (let [info   [:get "host/show/foo" {:extra "bar"}]
         params {:slug "foo" :extra "bar"}]
-    (assert= info (url-info :show params))))
+    (assert= info (url-info router host :show params))))
 
-(deftest-conf "url"
+(deftest "url"
   (let [the-path "host/show/foo"
         params   {:slug "foo" :extra "bar"}]
-    (assert= the-path (url :show params))))
+    (assert= the-path (url router host :show params))))

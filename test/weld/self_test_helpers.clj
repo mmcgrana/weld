@@ -1,11 +1,11 @@
 (ns weld.self-test-helpers
-  (:use weld.request clojure.set clojure.contrib.except)
-  (:import java.io.ByteArrayInputStream))
+  (:use (weld request) (clojure set) (clojure.contrib except))
+  (:import (java.io ByteArrayInputStream)))
 
 (defn str-input-stream
   "Returns a ByteArrayInputStream for the given String."
   [string]
-  (ByteArrayInputStream. (.getBytes string)))
+  (ByteArrayInputStream. (.getBytes #^String string)))
 
 (def base-req
   {:server-port        80
@@ -24,10 +24,9 @@
 (defn req-with
   "Returns a mock request, comparable to a request that is passed to a
   controller action in a regular Weld app. Attrs are the same as those that come
-  into the app from the last piece of wrapping middleware.
-  Pass :weld.request/route-params to spoof route params."
-  [attrs]
-  (let [route-params (get attrs :weld.request/route-params)]
-    (assoc-route-params
-      (new-request (merge base-req (dissoc attrs :weld.request/route-params)))
-      route-params)))
+  into the app from the last piece of wrapping middleware. Use the route-params
+  option to spoof route params."
+  [attrs & [route-params]]
+  (-> (merge base-req attrs)
+    (assoc-base-params)
+    (assoc-route-params route-params)))

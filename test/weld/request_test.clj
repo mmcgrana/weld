@@ -1,9 +1,7 @@
 (ns weld.request-test
-  (:use clj-unit.core
-        (weld request self-test-helpers config)
-        clojure.contrib.str-utils)
-  (:require [clj-time.core :as time])
-  (:load "request_cookies_test" "request_sessions_test"))
+  (:use (clj-unit core)
+        (weld request self-test-helpers)
+        (clojure.contrib str-utils)))
 
 (deftest "headers"
   (assert= {"foo" "bar"} (headers (req-with {:headers {"foo" "bar"}}))))
@@ -25,13 +23,13 @@
   (assert= "foo=bar"
     (query-string (req-with {:query-string "foo=bar"}))))
 
-(deftest "uri: before route params"
+(deftest "uri"
   (assert= "/foo/bar"
     (uri (req-with {:uri "/foo/bar"}))))
 
 (deftest "query-params"
-  (assert= {:foo {:bar "bat"}}
-    (query-params (req-with {:query-string "foo[bar]=bat"}))))
+  (assert= {:foo "bar"}
+    (query-params (req-with {:query-string "foo=bar"}))))
 
 (deftest "body-str"
   (assert= "foobar"
@@ -39,34 +37,19 @@
 
 (deftest "form-params"
   (assert= nil (form-params (req-with {:body "foo=bar"})))
-  (assert= {:foo {:bar "bat"}}
-    (form-params (req-with {:body (str-input-stream "foo[bar]=bat")
+  (assert= {:foo "bar"}
+    (form-params (req-with {:body (str-input-stream "foo=bar")
                             :content-type "application/x-www-form-urlencoded"}))))
 
 (deftest "mock-params"
   (assert= {:foo "bar"}
     (mock-params (req-with {:weld.request/mock-params {:foo "bar"}}))))
 
-(deftest "params*"
-  (binding [weld.request/multipart-params (constantly {:multipart "multipart"})]
-    (assert= {:query "query" :multipart "multipart" :mock "mock"}
-      (params* (req-with {:query-string "query=query"
-                          :weld.request/mock-params {:mock "mock"}}))))
-  (binding [weld.request/multipart-params (constantly nil)]
-    (let [req (req-with {:query-string "query=query"
-                         :body (str-input-stream "form=form")
-                         :content-type "application/x-www-form-urlencoded"
-                         :weld.request/mock-params {:mock "mock"}})
-          the-params* (params* req)]
-      (assert= {:query "query" :form "form" :mock "mock"} the-params*))))
-
 (deftest "params"
-  (assert= {:query "query" :mock "mock"}
+  (assert= {:query "query" :mock "mock" :routing "routing"}
     (params (req-with {:query-string "query=query"
-                       :weld.request/mock-params {:mock "mock"}})))
-  (assert= "bat"
-    (let [the-env (req-with {:query-string "foo[bar]=bat"})]
-      (params the-env :foo :bar))))
+                       :weld.request/mock-params {:mock "mock"}}
+                      {:routing "routing"}))))
 
 (deftest "request-method*"
   (assert= :get (request-method* (req-with {:request-method :get}))))

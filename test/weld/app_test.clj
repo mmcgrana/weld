@@ -1,53 +1,49 @@
 (ns weld.app-test
-  (:use clj-unit.core
-        (weld app routing request self-test-helpers config))
-  (:require (weld routing routing-test)))
-
-(defn echo [req]
-  req)
-
-(defn raise [req]
-  (throw (Exception. "o noes")))
+  (:use (clj-unit core)
+        (weld app routing request self-test-helpers)))
 
 (defn handle [req]
   (assoc req ::handled true))
 
+(defn raise [req]
+  (throw (Exception. "o noes")))
+
+(defn rescue [req]
+  (assoc req ::rescued true))
+
 (def router
-  (compiled-router [['weld.app-test/echo  :echo   :get "/echo/:id"]
-                    ['weld.app-test/raise :raise  :get "/raise"]
-                    ['foo/bar             :foobar :get "/foo/bar"]]))
+  (compiled-router [['weld.app-test/handle :echo   :get "/handle/:id"]
+                    ['weld.app-test/raise  :raise  :get "/raise"]
+                    ['weld.app-test/miss   :miss   :get "/miss"]]))
 
-(def config
-  {'weld.app/*logger*      {:test (constantly true) :log identity}
-   'weld.app/*handler-sym* 'weld.app-test/handle
-   'weld.routing/*router*  router})
+(def handled-app
+  (handler {:router router :failsafe 'weld.app-test/rescue}))
 
-(deftest "app: route does not resolve"
-  (with-config config
-    (assert-throws #"Routed to symbol that does not resolve: foo/bar"
-      (app (req-with {:request-method :get :uri "/foo/bar"})))))
+(def unhandled-app
+  (handler {:router router}))
 
-(deftest "app: unhandled error"
-  (with-config (assoc config 'weld.app/*handler-sym* nil)
-    (assert-throws #"o noes"
-      (app (req-with {:request-method :get :uri "/raise"})))))
-
-(deftest "app: mihandled error"
-  (with-config (assoc config 'weld.app/*handler-sym* 'foo/bar)
-    (assert-throws #"Handler symbol does not resolve: foo/bar"
-      (app (req-with {:request-method :get :uri "/raise"})))))
-
-(deftest "app: handled error"
-  (with-config config
-    (let [req-echo (app (req-with {:request-method :get :uri "/raise"}))]
-      (assert= :get (request-method req-echo))
-      (assert-that (get req-echo ::handled)))))
+(def mishandled-app
+  (handler {:router router :failsafe 'weld.app-test/miss}))
 
 (deftest "app: normal response"
-  (with-config config
-    (let [req-echo (app (req-with {:request-method :get :uri "/echo/bat"
-                                   :body (str-input-stream "foobar")}))]
-      (assert= {:id "bat"} (params req-echo))
-      (assert= :get        (request-method req-echo))
-      (assert= "foobar"    (body-str req-echo)))))
+  (let [resp (handled-app (req-with {:request-method :get :uri "/handle/bat"
+                                     :body (str-input-stream "foobar")}))]
+    (assert= {:id "bat"} (params resp))
+    (assert= :get        (request-method resp))
+    (assert= "foobar"    (body-str resp))))
 
+(deftest "app: route does not resolve"
+  (assert-throws #"Routed to symbol that does not resolve: weld.app-test/miss"
+    (handled-app (req-with {:request-method :get :uri "/miss"}))))
+
+(deftest "app: unhandled error"
+  (assert-throws #"o noes"
+    (unhandled-app (req-with {:request-method :get :uri "/raise"}))))
+
+(deftest "app: handled error"
+  (let [resp (handled-app (req-with {:request-method :get :uri "/raise"}))]
+    (assert-that (::rescued resp))))
+
+(deftest "app: mihandled error"
+  (assert-throws #"Handler symbol does not resolve: weld.app-test/miss"
+    (mishandled-app (req-with {:request-method :get :uri "/raise"}))))
