@@ -94,7 +94,7 @@
             items   (.parseRequest upload context)
             pairs   (map
                       (fn [#^DiskFileItem item]
-                        [(.getFieldName item)
+                        [(keyword (.getFieldName item))
                          (if (.isFormField item)
                            (.getString item)
                            ; need to keep handle on item to prevent tempfile GC
@@ -105,7 +105,7 @@
                               :tempfile       (.getStoreLocation item)}
                              {:disk-file-item item}))])
                       items)]
-      (reduce (fn [[k v] m] (assoc m (keyword k) v)) {} pairs)))))
+      (into {} pairs)))))
 
 (defn mock-params
   "Returns a hash of mock params given directly in the req, if any.

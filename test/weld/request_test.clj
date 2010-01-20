@@ -1,7 +1,9 @@
 (ns weld.request-test
   (:use (clj-unit core)
         (weld request self-test-helpers)
-        (clojure.contrib str-utils)))
+        (clojure.contrib str-utils)
+        (clojure.contrib [def :only (defvar-)]))
+  (:import (java.io File)))
 
 (deftest "headers"
   (assert= {"foo" "bar"} (headers (req-with {:headers {"foo" "bar"}}))))
@@ -40,6 +42,25 @@
   (assert= {:foo "bar"}
     (form-params (req-with {:body (str-input-stream "foo=bar")
                             :content-type "application/x-www-form-urlencoded"}))))
+
+(defvar- upload-content-type
+  "multipart/form-data; boundary=----WebKitFormBoundaryAyGUY6aMxOI6UF5s")
+
+(defvar- upload-content-length 188)
+
+(defvar- upload-body (str-input-stream
+  "------WebKitFormBoundaryAyGUY6aMxOI6UF5s\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nfoo\r\n\r\n------WebKitFormBoundaryAyGUY6aMxOI6UF5s--"))
+
+(deftest "multipart-params"
+  (let [req       (req-with {:content-type   upload-content-type
+                             :content-length upload-content-length
+                             :body           upload-body})
+        mp-params (multipart-params req)
+        upload    (:upload mp-params)]
+    (assert-instance String  (:filename upload))
+    (assert-instance Number  (:size upload))
+    (assert-instance String  (:content-type upload))
+    (assert-instance File    (:tempfile upload))))
 
 (deftest "mock-params"
   (assert= {:foo "bar"}
